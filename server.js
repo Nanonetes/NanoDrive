@@ -36,5 +36,6 @@ server.on('connection', socket => {
   socket.on('end', () => {
     console.log('Connection ended!');
     fileHandle.close();
+    server.close();
   });
 });
