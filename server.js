@@ -17,11 +17,13 @@ server.on('connection', socket => {
   
   socket.on('data', async (data) => {
     if (!fileHandle) {
+      socket.pause();
       fileHandle = await fs.open('./file.txt', 'w');
       fileWriteStream = fileHandle.createWriteStream();
       
       fileWriteStream.write(data);
       
+      socket.resume();
       fileWriteStream.on('drain', () => {
         socket.resume();
       });
