@@ -4,7 +4,7 @@ const fs = require('node:fs/promises');
 const PORT = 5000;
 const HOST = '::1';
 
-let fileHandle, fileStream;
+let fileHandle, fileWriteStream;
 
 const server = net.createServer();
 
@@ -17,21 +17,22 @@ server.on('connection', socket => {
   
   socket.on('data', async (data) => {
     if (!fileHandle) {
-      fileHandle = await fs.open('file.txt', 'w');
-      fileStream = fileHandle.createWriteStream();
+      fileHandle = await fs.open('./file.txt', 'w');
+      fileWriteStream = fileHandle.createWriteStream();
       
-      fileStream.write(data);
-      socket.on('drain', () => {
+      fileWriteStream.write(data);
+      
+      fileWriteStream.on('drain', () => {
         socket.resume();
       });
+      
     } else {
-      if (!fileStream.write(data)) {
-        socket.pause();
-      }
+      if (!fileWriteStream.write(data)) socket.pause();
     }
   });
   
   socket.on('end', () => {
     console.log('Connection ended!');
+    fileHandle.close();
   });
 });
