@@ -23,6 +23,9 @@ socket = net.createConnection(PORT, HOST, async () => {
   
   fileReadStream.on('end', () => {
     console.log(`File ${filePath} uploaded successfully!`);
+    fileHandle.close();
+    fileHandle = null;
+    fileReadStream = null;
     socket.end();
   });
 });
