@@ -13,7 +13,7 @@ server.listen(PORT, HOST, () => {
 });
 
 server.on('connection', socket => {
-  console.log('New Connection!');
+  console.log('New Connection!!');
   
   socket.on('data', async (data) => {
     fileHandle = await fs.open('serverStorage/file.txt', 'w');
