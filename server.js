@@ -38,6 +38,6 @@ server.on('connection', socket => {
     fileHandle.close();
     fileHandle = null;
     fileWriteStream = null;
-    server.close();
+    socket.end();
   });
 });
