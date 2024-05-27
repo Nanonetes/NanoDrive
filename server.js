@@ -16,20 +16,22 @@ server.on('connection', socket => {
   console.log('New Connection!!');
   
   socket.on('data', async (data) => {
-    fileHandle = await fs.open('serverStorage/file.txt', 'w');
-    fileStream = fileHandle.createWriteStream();
-    fileStream.write(data, error => {
-      if (error !== null) console.log(error);
-    });
+    if (!fileHandle) {
+      fileHandle = await fs.open('file.txt', 'w');
+      fileStream = fileHandle.createWriteStream();
+      
+      fileStream.write(data);
+      socket.on('drain', () => {
+        socket.resume();
+      });
+    } else {
+      if (!fileStream.write(data)) {
+        socket.pause();
+      }
+    }
   });
   
-  socket.on('close', (hadError) => {
-    if (hadError)
-      console.log('Connection closed with error');
-    else
-      console.log('File received');
-    console.log('Connection closed');
-    fileHandle.close();
-    server.close();
+  socket.on('end', () => {
+    console.log('Connection ended!');
   });
 });

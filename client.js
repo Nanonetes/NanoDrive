@@ -4,19 +4,30 @@ const fs = require('node:fs/promises');
 const PORT = 5000;
 const HOST = '::1';
 
-socket = net.createConnection(PORT, HOST);
+let fileHandle, fileStream;
 
-socket.on('connect', async () => {
-  const filePath = 'localStorage/test.txt';
-  const fileHandle = await fs.open(filePath, 'r');
-  const readStream = fileHandle.createReadStream();
-  readStream.on('data', chunk => {
-    socket.write(chunk);
+socket = net.createConnection(PORT, HOST, async () => {
+  const filePath = 'test.txt';
+  await uploadFile(filePath);
+});
+
+async function uploadFile(filePath) {
+  fileHandle = await fs.open(filePath, 'r');
+  fileStream = fileHandle.createReadStream();
+  
+  fileStream.on('data', chunk => {
+    if (!socket.write(chunk)) {
+      fileStream.pause();
+    }
   });
   
-  readStream.on('end', () => {
-    fileHandle.close();
+  socket.on('drain', () => {
+    fileStream.resume();
+  });
+  
+  fileStream.on('end', () => {
     console.log(`File ${filePath} uploaded successfully!`);
+    fileHandle.close();
     socket.end();
   });
-});
+}
