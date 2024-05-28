@@ -18,10 +18,16 @@ server.on('connection', socket => {
   socket.on('data', async (data) => {
     if (!fileHandle) {
       socket.pause();
-      fileHandle = await fs.open('./file.txt', 'w');
+      
+      const dividerIndex = data.indexOf('-------');
+      const fileName = data.subarray(10, dividerIndex).toString('utf8');
+      
+      console.log('File name:', fileName);
+      
+      fileHandle = await fs.open(`./serverStorage/${fileName}`, 'w');
       fileWriteStream = fileHandle.createWriteStream();
       
-      fileWriteStream.write(data);
+      fileWriteStream.write(data.subarray(dividerIndex + 7));
       
       socket.resume();
       fileWriteStream.on('drain', () => {
@@ -33,9 +39,15 @@ server.on('connection', socket => {
     }
   });
   
+  socket.on('error', error => {
+    console.error('Error:', error);
+    socket.end();
+  })
+  
   socket.on('end', () => {
     console.log('Connection ended!');
-    fileHandle.close();
-    server.close();
+    if (fileHandle) fileHandle.close();
+    fileHandle = undefined;
+    fileWriteStream = undefined;
   });
 });
